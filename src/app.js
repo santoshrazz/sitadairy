@@ -1,8 +1,9 @@
 import express from 'express'
-import userRoute from './src/routes/user.route.js';
-import { errorHandler } from './src/middleware/errorHandler.middleware.js';
+import userRoute from './routes/user.route.js';
+import { errorHandler } from './middleware/errorHandler.middleware.js';
 import cors from 'cors'
 import { rateLimit } from 'express-rate-limit'
+import { milkRouter } from './routes/milk.route.js';
 const app = express();
 
 app.use(express.json({ limit: "16kb" }))
@@ -25,5 +26,6 @@ app.get("/", (req, res) => {
     res.send("Hello From Santosh's Api")
 })
 app.use('/api/v1/user', userRoute)
+app.use('/api/v1/milk', milkRouter)
 app.use(errorHandler);
 export { app }

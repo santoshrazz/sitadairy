@@ -123,11 +123,10 @@ export const getSingleCustomerDetail = async (request, response, next) => {
 
 export const updateUserDetails = async (request, response, next) => {
     try {
-        const userId = request.user._id
+        const userId = request.user?._id
         if (!userId) {
             next(new ApiError("userId is required to update user", 400))
         }
-
         const { name, mobile, fatherName, address, profilePic } = request.body;
         const updateData = {};
         if (name) updateData.name = name;
@@ -140,6 +139,7 @@ export const updateUserDetails = async (request, response, next) => {
         const updatedUser = await userModal.findByIdAndUpdate(userId, updateData, { new: true, runValidators: true })
         response.status(200).json({ success: true, message: "User details updated successfully", user: updatedUser })
     } catch (error) {
-        next(new ApiError("Error getting single user details", 400))
+        console.log("error", error)
+        next(new ApiError("Error updating user details", 400))
     }
 }

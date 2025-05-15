@@ -10,6 +10,11 @@ const milkSchema = new Schema({
         required: [true, "price is required"],
         trim: true,
     },
+    rate: {
+        type: String,
+        required: [true, "rate is required"],
+        trim: true,
+    },
     sf: {
         type: String,
         required: [true, "sf value is required"]

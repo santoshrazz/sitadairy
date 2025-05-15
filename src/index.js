@@ -1,8 +1,8 @@
 import dotenv from 'dotenv'
 import { app } from './app.js'
-import { connectToDb } from './src/db/connectToDb.js'
+import { connectToDb } from './db/connectToDb.js'
 
-dotenv.config({ path: "/.env" })
+dotenv.config({ path: "./.env" })
 
 connectToDb().then(() => {
     app.listen(process.env.PORT || 8080, () => {
