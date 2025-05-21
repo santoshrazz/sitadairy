@@ -139,7 +139,31 @@ export const updateUserDetails = async (request, response, next) => {
         const updatedUser = await userModal.findByIdAndUpdate(userId, updateData, { new: true, runValidators: true })
         response.status(200).json({ success: true, message: "User details updated successfully", user: updatedUser })
     } catch (error) {
-        console.log("error", error)
         next(new ApiError("Error updating user details", 400))
+    }
+}
+
+export const updateAdminPassword = async (request, response, next) => {
+    try {
+        const { oldPassword, newPassword } = request.body;
+        const userId = request.user._id;
+        if (!oldPassword || !newPassword) {
+            return next(new ApiError("oldPassword and new password required", 400))
+        }
+        const currentUser = await userModal.findById(userId);
+        if (!currentUser) {
+            return next(new ApiError("no user found", 400))
+        }
+
+        const isCorrectPassword = await currentUser.comparePassword(oldPassword)
+        if (!isCorrectPassword) {
+            return next(new ApiError("Incorrect Password", 400))
+        }
+        currentUser.password = newPassword;
+        await currentUser.save()
+        response.status(200).json({ success: true, message: "password updated" })
+    } catch (error) {
+        console.log("error", error)
+        next(new ApiError("Error while trying to update admin password", 400))
     }
 }

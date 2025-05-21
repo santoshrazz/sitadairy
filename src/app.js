@@ -4,6 +4,8 @@ import { errorHandler } from './middleware/errorHandler.middleware.js';
 import cors from 'cors'
 import { rateLimit } from 'express-rate-limit'
 import { milkRouter } from './routes/milk.route.js';
+import helmet from 'helmet'
+
 const app = express();
 
 app.use(express.json({ limit: "16kb" }))
@@ -22,6 +24,7 @@ const limiter = rateLimit({
     legacyHeaders: false,
 })
 app.use(limiter)
+app.use(helmet());
 app.get("/", (req, res) => {
     res.send("Hello From Santosh's Api")
 })

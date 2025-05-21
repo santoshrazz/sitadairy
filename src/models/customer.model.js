@@ -30,7 +30,6 @@ const userSchema = new Schema({
     password: {
         type: String,
         minLength: [5, "Minimum 6 character required"],
-        select: false,
         required: [true, "Password is require"]
     },
     address: {
