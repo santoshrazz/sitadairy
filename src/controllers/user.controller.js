@@ -1,6 +1,6 @@
 import { customAlphabet } from 'nanoid'
 const nanoId = customAlphabet("1234567890", 5)
-import { userModal } from '../models/customer.model.js'
+import { userModal } from '../models/customer.modal.js'
 import { ApiError } from '../middleware/errorHandler.middleware.js'
 
 export const handleCreateUser = async (request, response, next) => {

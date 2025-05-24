@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { ApiError } from './errorHandler.middleware.js'
-import { userModal } from '../models/customer.model.js'
+import { userModal } from '../models/customer.modal.js'
 
 export async function verifyUserToken(req, res, next) {
     try {
