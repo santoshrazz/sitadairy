@@ -10,6 +10,10 @@ const milkSchema = new Schema({
         required: [true, "price is required"],
         trim: true,
     },
+    fat: {
+        type: String,
+        required: [true, "fat percent is required"],
+    },
     date: {
         type: Date,
         required: [true, "Date is required"],

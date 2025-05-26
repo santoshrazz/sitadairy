@@ -4,8 +4,8 @@ import { orderModal } from "../models/order.modal.js"
 
 export const createMilkEntry = async (request, response, next) => {
     try {
-        const { weight, price, snf, shift, rate, date, userId } = request.body
-        if (!weight || !price || !snf || !shift || !rate || !userId || !date) {
+        const { weight, price, snf, shift, rate, date, fat, userId } = request.body
+        if (!weight || !price || !snf || !shift || !rate || !userId || !date || !fat) {
             return next(new ApiError("No required data to create milk entry", 400))
         }
         const dateObj = new Date(date);
@@ -16,7 +16,7 @@ export const createMilkEntry = async (request, response, next) => {
             return next(new ApiError("Entry is already created", 400))
         }
 
-        const createdEntry = await milkModal.create({ weight, price, shift, date: dateObj, rate, snf, byUser: userId })
+        const createdEntry = await milkModal.create({ weight, price, shift, date: dateObj, rate, snf, fat, byUser: userId })
         response.status(200).json({ success: true, message: "Milk Entry Created", data: createdEntry })
     } catch (error) {
         next(new ApiError("Error creating milk entry", 400))
@@ -147,6 +147,7 @@ export const getMilkEntryById = async (request, response, next) => {
     }
 };
 
+// ===========> Milk Order Controller <============
 export const createMilkOrder = async (request, response, next) => {
     try {
         const { date, weight, contact, } = request.body;
@@ -178,5 +179,33 @@ export const getMilkOrder = async (request, response, next) => {
         response.status(200).json({ success: true, data: orders, message: "Entry retrived successfully" });
     } catch (error) {
         next(new ApiError("error getting milk order", 400));
+    }
+}
+export const updateMilkOrderStatus = async (request, response, next) => {
+    try {
+        const milkId = request.params.id;
+        const status = request.query.status;
+        if (!milkId || !status) {
+            return next(new ApiError("no enough data to update milk status", 400));
+        }
+        const updatedMilk = await orderModal.findByIdAndUpdate(milkId, { status }, { runValidators: true, new: true })
+
+        response.status(200).json({ success: true, message: "Milk order Updated", data: updatedMilk });
+    } catch (error) {
+        return next(new ApiError("error getting milk order", 400));
+    }
+}
+
+export const deleteMilkOrder = async (request, response, next) => {
+    try {
+        const milkId = request.params.id;
+        if (!milkId) {
+            return next(new ApiError("no milk id to delete milk order", 400));
+        }
+        const updatedMilk = await orderModal.findByIdAndDelete(milkId)
+
+        response.status(200).json({ success: true, message: "Milk order Updated", data: updatedMilk });
+    } catch (error) {
+        return next(new ApiError("error getting milk order", 400));
     }
 }
