@@ -195,7 +195,6 @@ export const updateMilkOrderStatus = async (request, response, next) => {
         return next(new ApiError("error getting milk order", 400));
     }
 }
-
 export const deleteMilkOrder = async (request, response, next) => {
     try {
         const milkId = request.params.id;

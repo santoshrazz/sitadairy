@@ -1,7 +1,6 @@
-import { customAlphabet } from 'nanoid'
-const nanoId = customAlphabet("1234567890", 5)
 import { userModal } from '../models/customer.modal.js'
 import { ApiError } from '../middleware/errorHandler.middleware.js'
+import { milkModal } from '../models/milk.modal.js'
 
 export const handleCreateUser = async (request, response, next) => {
     try {
@@ -13,7 +12,7 @@ export const handleCreateUser = async (request, response, next) => {
         if (isUserExists) {
             return next(new ApiError("User already exists try logging into your account", 400))
         }
-        const password = nanoId(5);
+        const password = mobile.slice(0, 5);
         const createdUser = await userModal.create({
             id: password,
             name,
@@ -107,16 +106,19 @@ export const getSingleCustomerDetail = async (request, response, next) => {
         if (!userId) {
             return next(new ApiError("userId is required to get the user info", 400))
         }
-        const userDetails = await userModal.findOne({ id: userId })
+        const userDetails = await userModal.findById(userId)
         if (!userDetails) {
             return next(new ApiError("No user found with the given id", 400))
         }
+        const milkWithCustomer = await milkModal.find({ byUser: userId }).sort({ createdAt: -1 })
         response.status(200).json({
             success: true,
             message: "user detail retrieved successfully.",
             user: userDetails,
+            entry: milkWithCustomer
         });
     } catch (error) {
+        console.log("Error", error)
         next(new ApiError("Error getting single user details", 400))
     }
 }
@@ -162,6 +164,96 @@ export const updateAdminPassword = async (request, response, next) => {
         currentUser.password = newPassword;
         await currentUser.save()
         response.status(200).json({ success: true, message: "password updated" })
+    } catch (error) {
+        next(new ApiError("Error while trying to update admin password", 400))
+    }
+}
+
+
+// =====> Dashboard Data Controller <=========
+export const dashboardData = async (request, response, next) => {
+    const role = request.query.role || "User"
+    const userId = request.user._id;
+    try {
+        if (role === "Admin") {
+            const totalCustomers = await userModal.collection.countDocuments({ role: "User" })
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+            const monthlyData = await milkModal.find({
+                date: { $gte: startOfMonth, $lte: endOfMonth }
+            });
+            const totalMonthlyEarnings = monthlyData.reduce((acc, entry) => acc + parseFloat(entry.price), 0);
+            const totalMonthlyMilk = monthlyData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0);
+
+            const todayData = await milkModal.find({
+                date: { $gte: startOfToday, $lt: endOfToday }
+            });
+            const totalTodaysEarnings = todayData.reduce((acc, entry) => acc + parseFloat(entry.price), 0);
+            const totalTodaysMilk = todayData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0);
+            const lastFiveEntries = await milkModal.find({})
+                .sort({ date: -1 }) // or use createdAt
+                .limit(5);
+            const allDashboardData = {
+                totalCustomers: totalCustomers,
+                totalMonthlyEarnings,
+                totalMonthlyMilk,
+                totalTodaysMilk,
+                totalTodaysEarnings,
+                lastFiveEntries
+            }
+            response.status(200).json({ message: "Success", success: true, data: allDashboardData })
+        }
+        else {
+            const now = new Date();
+            // Time ranges
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+            // Monthly data
+            const monthlyData = await milkModal.find({
+                byUser: userId,
+                date: { $gte: startOfMonth, $lte: endOfMonth }
+            });
+
+            // Today's data
+            const todayData = await milkModal.find({
+                byUser: userId,
+                date: { $gte: startOfToday, $lt: endOfToday }
+            });
+
+            // Last 5 entries
+            const lastFiveEntries = await milkModal.find({ byUser: userId })
+                .sort({ date: -1 }) // or use createdAt
+                .limit(5);
+
+            // Earnings and milk totals
+            const totalMonthlyEarnings = monthlyData.reduce((acc, entry) => acc + parseFloat(entry.price), 0);
+            const totalMonthlyMilk = monthlyData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0);
+
+            const totalTodaysEarnings = todayData.reduce((acc, entry) => acc + parseFloat(entry.price), 0);
+            const totalTodaysMilk = todayData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0);
+
+            // Fat and SNF values for today
+            const todaysFatValues = todayData.length ? todayData.map(entry => parseFloat(entry.fat || 0)) : 0;
+            const todaysSnfValues = todayData.length ? todayData.map(entry => parseFloat(entry.snf || 0)) : 0;
+
+            const allDashboardData = {
+                monthlyEarning: totalMonthlyEarnings,
+                totalMonthlyMilk,
+                totalTodaysEarnings,
+                totalTodaysMilk,
+                todaysFatValues,
+                todaysSnfValues,
+                lastFiveEntries
+            }
+            response.status(200).json({ message: "Success", success: true, data: allDashboardData })
+        }
     } catch (error) {
         console.log("error", error)
         next(new ApiError("Error while trying to update admin password", 400))
