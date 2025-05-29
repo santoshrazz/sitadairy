@@ -102,6 +102,25 @@ export const getAllCustomerList = async (request, response, next) => {
 
 export const getSingleCustomerDetail = async (request, response, next) => {
     try {
+        const userId = request.user._id;
+        if (!userId) {
+            return next(new ApiError("userId is required to get the user info", 400))
+        }
+        const userDetails = await userModal.findById(userId)
+        if (!userDetails) {
+            return next(new ApiError("No user found with the given id", 400))
+        }
+        response.status(200).json({
+            success: true,
+            message: "user detail retrieved successfully.",
+            user: userDetails,
+        });
+    } catch (error) {
+        next(new ApiError("Error getting single user details", 400))
+    }
+}
+export const getSingleCustomerDetailAdmin = async (request, response, next) => {
+    try {
         const userId = request.params.id;
         if (!userId) {
             return next(new ApiError("userId is required to get the user info", 400))
@@ -118,7 +137,6 @@ export const getSingleCustomerDetail = async (request, response, next) => {
             entry: milkWithCustomer
         });
     } catch (error) {
-        console.log("Error", error)
         next(new ApiError("Error getting single user details", 400))
     }
 }
