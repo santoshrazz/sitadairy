@@ -172,10 +172,10 @@ export const updateAdminPassword = async (request, response, next) => {
 
 // =====> Dashboard Data Controller <=========
 export const dashboardData = async (request, response, next) => {
-    const role = request.query.role || "User"
     const userId = request.user._id;
     try {
-        if (role === "Admin") {
+        const reqUser = await userModal.findById(userId);
+        if (reqUser?.role === "Admin") {
             const totalCustomers = await userModal.collection.countDocuments({ role: "User" })
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
