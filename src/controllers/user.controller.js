@@ -214,7 +214,7 @@ export const dashboardData = async (request, response, next) => {
             const totalTodaysMilk = todayData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0);
             const lastFiveEntries = await milkModal.find({})
                 .sort({ date: -1 }) // or use createdAt
-                .limit(5);
+                .limit(5).populate("byUser", "name");
             const allDashboardData = {
                 totalCustomers: totalCustomers,
                 totalMonthlyEarnings,
@@ -248,7 +248,7 @@ export const dashboardData = async (request, response, next) => {
             // Last 5 entries
             const lastFiveEntries = await milkModal.find({ byUser: userId })
                 .sort({ date: -1 }) // or use createdAt
-                .limit(5);
+                .limit(5).populate("byUser", "name");
 
             // Earnings and milk totals
             const totalMonthlyEarnings = monthlyData.reduce((acc, entry) => acc + parseFloat(entry.price), 0);
@@ -273,7 +273,61 @@ export const dashboardData = async (request, response, next) => {
             response.status(200).json({ message: "Success", success: true, data: allDashboardData })
         }
     } catch (error) {
-        console.log("error", error)
         next(new ApiError("Error while trying to update admin password", 400))
+    }
+}
+
+// =====> Seller Controllers  <======
+export const createSeller = async (request, response, next) => {
+    try {
+        const { name, collectionCenter, dailryName, fatherName, mobile } = request.body
+        if (!name || !collectionCenter || !dailryName || !fatherName || !mobile) {
+            return next(new ApiError("No required information available", 400))
+        }
+        const isUserExists = await userModal.findOne({ mobile })
+        if (isUserExists) {
+            return next(new ApiError("User already exists try logging into your account", 400))
+        }
+        const password = mobile.slice(0, 5);
+        const createdUser = await userModal.create({
+            id: password,
+            name,
+            collectionCenter,
+            dailryName,
+            fatherName,
+            mobile,
+            password,
+            role: "Seller"
+        })
+        if (!createdUser) {
+            return next(new ApiError("Unable to create user", 400))
+        }
+
+        const newUser = await userModal.findById(createdUser._id).select("-password -isVerified");
+        const userResponse = {
+            id: newUser.id,
+            name: newUser.name,
+            mobile: newUser.mobile,
+            role: newUser.role,
+            profilePic: newUser.profilePic,
+            fatherName: newUser.fatherName
+        };
+        const token = await newUser.generateAuthToken();
+        newUser.token = token;
+        response.status(201).json({ message: "User created", token, user: userResponse, success: true })
+    } catch (error) {
+        next(new ApiError("Error while trying to update admin password", 400))
+    }
+}
+export const getAllSellerList = async (request, response, next) => {
+    try {
+        const allCustomers = await userModal.find({ role: "Seller" })
+        response.status(200).json({
+            success: true,
+            message: "customers retrieved successfully.",
+            users: allCustomers,
+        });
+    } catch (error) {
+        next(new ApiError("Error getting all customer list", 400))
     }
 }

@@ -35,6 +35,10 @@ const userSchema = new Schema({
     address: {
         type: String
     },
+    walletAmount: {
+        type: Number,
+        default: 0
+    },
     isVerified: {
         type: Boolean,
         default: false
@@ -45,7 +49,7 @@ const userSchema = new Schema({
     },
     role: {
         type: String,
-        enum: ["User", "Admin"],
+        enum: ["User", "Admin", "Seller"],
         default: "User"
     },
     // byUser: {

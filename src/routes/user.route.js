@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { dashboardData, getAllCustomerList, getSingleCustomerDetail, getSingleCustomerDetailAdmin, handleCreateUser, handleLoginUser, updateAdminPassword, updateUserDetails } from '../controllers/user.controller.js';
+import { createSeller, dashboardData, getAllCustomerList, getSingleCustomerDetail, getSingleCustomerDetailAdmin, handleCreateUser, handleLoginUser, updateAdminPassword, updateUserDetails } from '../controllers/user.controller.js';
 import { isAdmin, verifyUserToken } from '../middleware/userVerify.middeware.js'
 import { createMilkOrder, deleteMilkOrder, getMilkOrder, updateMilkOrderStatus } from '../controllers/milk.controller.js';
 const userRoute = Router();
@@ -18,4 +18,7 @@ userRoute.route('/dashboard').get(verifyUserToken, dashboardData)
 // Admin related controller
 userRoute.route('/all-customers').get(verifyUserToken, isAdmin, getAllCustomerList)
 
+
+// Routes for Customer Sale
+userRoute.route('/create-seller').get(verifyUserToken, isAdmin, createSeller)
 export default userRoute
