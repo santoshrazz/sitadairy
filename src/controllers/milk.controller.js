@@ -80,8 +80,8 @@ export const deleteMilkEntry = async (request, response, next) => {
 
 export const getMilkEntriesByUser = async (request, response, next) => {
     try {
-        const { startDate, endDate, date, userId, shift } = request.query;
-
+        const { startDate, endDate, userId, shift } = request.query;
+        const date = request.query.date || new Date();
         const filter = {};
 
         // Filter by specific date
