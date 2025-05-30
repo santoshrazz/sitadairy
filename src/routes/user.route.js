@@ -6,8 +6,8 @@ const userRoute = Router();
 
 userRoute.route("/create").post(handleCreateUser)
 userRoute.route('/login').post(handleLoginUser)
-userRoute.route('/getSingleCustomerDetail').get(getSingleCustomerDetail)
-userRoute.route('/get-user-profile/:id').get(getSingleCustomerDetailAdmin)
+userRoute.route('/getSingleCustomerDetail').get(verifyUserToken, getSingleCustomerDetail)
+userRoute.route('/get-user-profile/:id').get(verifyUserToken, isAdmin, getSingleCustomerDetailAdmin)
 userRoute.route('/update').put(verifyUserToken, updateUserDetails)
 userRoute.route('/change-password').put(verifyUserToken, isAdmin, updateAdminPassword)
 
