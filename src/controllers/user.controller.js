@@ -214,7 +214,7 @@ export const dashboardData = async (request, response, next) => {
             const totalTodaysMilk = todayData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0);
             const lastFiveEntries = await milkModal.find({})
                 .sort({ date: -1 }) // or use createdAt
-                .limit(5).populate("byUser", "name");
+                .limit(5).populate("byUser", "name profilePic");
             const allDashboardData = {
                 totalCustomers: totalCustomers,
                 totalMonthlyEarnings,
@@ -248,7 +248,7 @@ export const dashboardData = async (request, response, next) => {
             // Last 5 entries
             const lastFiveEntries = await milkModal.find({ byUser: userId })
                 .sort({ date: -1 }) // or use createdAt
-                .limit(5).populate("byUser", "name");
+                .limit(5).populate("byUser", "name profilePic");
 
             // Earnings and milk totals
             const totalMonthlyEarnings = monthlyData.reduce((acc, entry) => acc + parseFloat(entry.price), 0);
