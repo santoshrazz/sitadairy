@@ -204,14 +204,14 @@ export const dashboardData = async (request, response, next) => {
             const monthlyData = await milkModal.find({
                 date: { $gte: startOfMonth, $lte: endOfMonth }
             });
-            const totalMonthlyEarnings = monthlyData.reduce((acc, entry) => acc + parseFloat(entry.price), 0);
-            const totalMonthlyMilk = monthlyData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0);
+            const totalMonthlyEarnings = monthlyData.reduce((acc, entry) => acc + parseFloat(entry.price), 0).toFixed(1);
+            const totalMonthlyMilk = monthlyData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0).toFixed(1);
 
             const todayData = await milkModal.find({
                 date: { $gte: startOfToday, $lt: endOfToday }
             });
-            const totalTodaysEarnings = todayData.reduce((acc, entry) => acc + parseFloat(entry.price), 0);
-            const totalTodaysMilk = todayData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0);
+            const totalTodaysEarnings = todayData.reduce((acc, entry) => acc + parseFloat(entry.price), 0).toFixed(1);
+            const totalTodaysMilk = todayData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0).toFixed(1);;
             const lastFiveEntries = await milkModal.find({})
                 .sort({ date: -1 }) // or use createdAt
                 .limit(5).populate("byUser", "name profilePic");
@@ -251,15 +251,15 @@ export const dashboardData = async (request, response, next) => {
                 .limit(5).populate("byUser", "name profilePic");
 
             // Earnings and milk totals
-            const totalMonthlyEarnings = monthlyData.reduce((acc, entry) => acc + parseFloat(entry.price), 0);
-            const totalMonthlyMilk = monthlyData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0);
+            const totalMonthlyEarnings = monthlyData.reduce((acc, entry) => acc + parseFloat(entry.price), 0).toFixed(1);
+            const totalMonthlyMilk = monthlyData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0).toFixed(1);
 
-            const totalTodaysEarnings = todayData.reduce((acc, entry) => acc + parseFloat(entry.price), 0);
-            const totalTodaysMilk = todayData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0);
+            const totalTodaysEarnings = todayData.reduce((acc, entry) => acc + parseFloat(entry.price), 0).toFixed(1);
+            const totalTodaysMilk = todayData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0).toFixed(1);
 
             // Fat and SNF values for today
-            const todaysFatValues = todayData.length ? todayData.map(entry => parseFloat(entry.fat || 0)) : 0;
-            const todaysSnfValues = todayData.length ? todayData.map(entry => parseFloat(entry.snf || 0)) : 0;
+            const todaysFatValues = todayData.length ? todayData.map(entry => parseFloat(entry.fat || 0)).toFixed(1) : "0";
+            const todaysSnfValues = todayData.length ? todayData.map(entry => parseFloat(entry.snf || 0)).toFixed(1) : "0";
 
             const allDashboardData = {
                 monthlyEarning: totalMonthlyEarnings,
