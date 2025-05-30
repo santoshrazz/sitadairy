@@ -1,6 +1,7 @@
 import { ApiError } from "../middleware/errorHandler.middleware.js"
 import { milkModal } from "../models/milk.modal.js"
 import { orderModal } from "../models/order.modal.js"
+import { userModal } from '../models/customer.modal.js'
 
 export const createMilkEntry = async (request, response, next) => {
     try {
@@ -80,9 +81,14 @@ export const deleteMilkEntry = async (request, response, next) => {
 
 export const getMilkEntriesByUser = async (request, response, next) => {
     try {
-        const { startDate, endDate, userId, shift } = request.query;
+        const { startDate, endDate, shift } = request.query;
         const date = request.query.date || new Date();
+        let userId = request.query.userId;
         const filter = {};
+        const currentUser = await userModal.findById(request.user._id)
+        if (request.user._id && currentUser.role === "User") {
+            userId = request.user._id
+        }
 
         // Filter by specific date
         if (date) {
@@ -116,7 +122,6 @@ export const getMilkEntriesByUser = async (request, response, next) => {
         if (shift) {
             filter.shift = shift;
         }
-
         const entries = await milkModal.find(filter).populate('byUser', "name id").sort({ date: -1 });
 
         response.status(200).json({ success: true, data: entries });
