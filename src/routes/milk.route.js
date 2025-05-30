@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { createMilkEntry, deleteMilkEntry, getMilkEntriesByUser, updateMilkEntry, createMilkOrder, getMilkOrder } from '../controllers/milk.controller.js';
+import { createMilkEntry, deleteMilkEntry, getMilkEntriesByUser, updateMilkEntry, createMilkOrder, getMilkOrder, sellMilk, getSellMilkEntriesByUser, updateSellMilkEntry, deleteSellMilkEntry } from '../controllers/milk.controller.js';
 import { isAdmin, verifyUserToken } from '../middleware/userVerify.middeware.js';
 
 const milkRouter = Router();
@@ -14,4 +14,10 @@ milkRouter.get('/get', verifyUserToken, getMilkEntriesByUser);
 milkRouter.post('/order', verifyUserToken, createMilkOrder)
 milkRouter.get('/order', verifyUserToken, getMilkOrder)
 
+// Routes For sell milk
+milkRouter.route('/sell')
+    .get(verifyUserToken, isAdmin, getSellMilkEntriesByUser)
+    .post(verifyUserToken, isAdmin, sellMilk)
+    .put(verifyUserToken, isAdmin, updateSellMilkEntry)
+    .delete(verifyUserToken, isAdmin, deleteSellMilkEntry)
 export { milkRouter }

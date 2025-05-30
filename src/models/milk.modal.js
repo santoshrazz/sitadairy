@@ -12,7 +12,6 @@ const milkSchema = new Schema({
     },
     fat: {
         type: String,
-        required: [true, "fat percent is required"],
     },
     date: {
         type: Date,
@@ -26,12 +25,17 @@ const milkSchema = new Schema({
     },
     snf: {
         type: String,
-        required: [true, "sf value is required"]
     },
     shift: {
         type: String,
         required: [true, "shift is required"],
         enum: ["Morning", "Evening"],
+    },
+    entryType: {
+        type: String,
+        required: [true, "shift is required"],
+        enum: ["Buy", "Sell"],
+        default: "Buy"
     },
     byUser: {
         type: mongoose.Schema.Types.ObjectId,
