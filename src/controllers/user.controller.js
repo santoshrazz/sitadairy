@@ -270,8 +270,8 @@ export const dashboardData = async (request, response, next) => {
             const totalTodaysMilk = todayData.reduce((acc, entry) => acc + parseFloat(entry.weight), 0).toFixed(1);
 
             // Fat and SNF values for today
-            const todaysFatValues = todayData.length ? todayData.map(entry => parseFloat(entry.fat || 0)).toFixed(1) : "0";
-            const todaysSnfValues = todayData.length ? todayData.map(entry => parseFloat(entry.snf || 0)).toFixed(1) : "0";
+            const todaysFatValues = todayData.length ? todayData.map(entry => parseFloat(entry.fat || 0)) : "0";
+            const todaysSnfValues = todayData.length ? todayData.map(entry => parseFloat(entry.snf || 0)) : "0";
 
             const allDashboardData = {
                 monthlyEarning: totalMonthlyEarnings,
@@ -285,7 +285,8 @@ export const dashboardData = async (request, response, next) => {
             response.status(200).json({ message: "Success", success: true, data: allDashboardData })
         }
     } catch (error) {
-        next(new ApiError("Error while trying to update admin password", 400))
+        console.log("error", error)
+        next(new ApiError("Error while retrieving dashboard data", 400))
     }
 }
 
