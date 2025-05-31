@@ -1,6 +1,7 @@
 import { userModal } from '../models/customer.modal.js'
 import { ApiError } from '../middleware/errorHandler.middleware.js'
 import { milkModal } from '../models/milk.modal.js'
+import { uploadToCloudinery } from '../utils/cloudinery.js'
 
 export const handleCreateUser = async (request, response, next) => {
     try {
@@ -147,15 +148,26 @@ export const updateUserDetails = async (request, response, next) => {
         if (!userId) {
             next(new ApiError("userId is required to update user", 400))
         }
-        const { name, mobile, fatherName, address, profilePic } = request.body;
+        const { name, mobile, fatherName, address } = request.body;
         const updateData = {};
+
+        const profilePic = request?.file?.buffer;
+        let userUploadedProfilePic = "";
+
+        if (profilePic) {
+            const uploadUrl = await uploadToCloudinery(profilePic)
+            if (!uploadUrl) {
+                return new ApiError("Error  Uploading Profile Pic", 400)
+            }
+            userUploadedProfilePic = uploadUrl
+        }
+
         if (name) updateData.name = name;
         if (mobile) updateData.mobile = mobile
         if (fatherName) updateData.fatherName = fatherName
         if (address) updateData.address = address
+        if (userUploadedProfilePic) updateData.profilePic = userUploadedProfilePic;
 
-        // Profile pic should be in base-64 format
-        if (profilePic) updateData.profilePic = profilePic
         const updatedUser = await userModal.findByIdAndUpdate(userId, updateData, { new: true, runValidators: true })
         response.status(200).json({ success: true, message: "User details updated successfully", user: updatedUser })
     } catch (error) {
