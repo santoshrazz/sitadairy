@@ -86,7 +86,7 @@ export const getMilkEntriesByUser = async (request, response, next) => {
         let userId = request.query.userId;
         const filter = {};
         const currentUser = await userModal.findById(request.user._id)
-        if (request.user._id && currentUser.role === "User") {
+        if (request.user._id && currentUser.role === "User" || currentUser.role === "Buyer" || currentUser.role === "Farmer") {
             userId = request.user._id
         }
 
@@ -122,7 +122,7 @@ export const getMilkEntriesByUser = async (request, response, next) => {
         if (shift) {
             filter.shift = shift;
         }
-        const entries = await milkModal.find(filter).populate('byUser', "name id").sort({ date: -1 });
+        const entries = await milkModal.find(filter).populate('byUser', "name id profilePic").sort({ date: -1 });
 
         response.status(200).json({ success: true, data: entries });
     } catch (error) {

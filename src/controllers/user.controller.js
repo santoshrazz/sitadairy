@@ -5,8 +5,8 @@ import { uploadToCloudinery } from '../utils/cloudinery.js'
 
 export const handleCreateUser = async (request, response, next) => {
     try {
-        const { name, collectionCenter, dailryName, fatherName, mobile } = request.body
-        if (!name || !collectionCenter || !dailryName || !fatherName || !mobile) {
+        const { name, mobile } = request.body
+        if (!name || !mobile) {
             return next(new ApiError("No required information available", 400))
         }
         const isUserExists = await userModal.findOne({ mobile })
@@ -17,9 +17,6 @@ export const handleCreateUser = async (request, response, next) => {
         const createdUser = await userModal.create({
             id: password,
             name,
-            collectionCenter,
-            dailryName,
-            fatherName,
             mobile,
             password,
         })
@@ -30,11 +27,11 @@ export const handleCreateUser = async (request, response, next) => {
         const newUser = await userModal.findById(createdUser._id).select("-password -isVerified");
         const userResponse = {
             id: newUser.id,
+            _id: newUser._id,
             name: newUser.name,
             mobile: newUser.mobile,
             role: newUser.role,
             profilePic: newUser.profilePic,
-            fatherName: newUser.fatherName
         };
         const token = await newUser.generateAuthToken();
         newUser.token = token;
@@ -68,11 +65,11 @@ export const handleLoginUser = async (request, response, next) => {
         // Exclude sensitive fields before sending the user data
         const userResponse = {
             id: user.id,
+            _id: user._id,
             name: user.name,
             mobile: user.mobile,
             role: user.role,
             profilePic: user.profilePic,
-            fatherName: user.fatherName
         };
 
         // Send the response
@@ -90,14 +87,23 @@ export const handleLoginUser = async (request, response, next) => {
 
 export const getAllCustomerList = async (request, response, next) => {
     try {
-        const allCustomers = await userModal.find({ role: "User" })
+        const role = request.query.role;
+        const filters = {}
+        if (role) {
+            filters.role = role
+        }
+        else {
+            filters.role = { $ne: "Admin" }
+        }
+
+        const allCustomers = await userModal.find(filters)
         response.status(200).json({
             success: true,
             message: "customers retrieved successfully.",
             users: allCustomers,
         });
     } catch (error) {
-        next(new ApiError("Error getting all customer list", 400))
+        next(new ApiError("Error getting all customer list", 500))
     }
 }
 
@@ -195,10 +201,19 @@ export const updateAdminPassword = async (request, response, next) => {
         await currentUser.save()
         response.status(200).json({ success: true, message: "password updated" })
     } catch (error) {
-        next(new ApiError("Error while trying to update admin password", 400))
+        next(new ApiError("Error while trying to update admin password", 500))
     }
 }
-
+export const deleteUserAccount = async (request, response, next) => {
+    try {
+        const userId = request.user._id;
+        await userModal.findByIdAndDelete(userId)
+        return response.status(200).json({ success: true, message: "account deleted successfully" })
+    } catch (error) {
+        console.log("error", error)
+        return next(new ApiError("Error deleting user account", 400))
+    }
+}
 
 // =====> Dashboard Data Controller <=========
 export const dashboardData = async (request, response, next) => {
@@ -285,7 +300,6 @@ export const dashboardData = async (request, response, next) => {
             response.status(200).json({ message: "Success", success: true, data: allDashboardData })
         }
     } catch (error) {
-        console.log("error", error)
         next(new ApiError("Error while retrieving dashboard data", 400))
     }
 }
@@ -293,8 +307,8 @@ export const dashboardData = async (request, response, next) => {
 // =====> Seller Controllers  <======
 export const createSeller = async (request, response, next) => {
     try {
-        const { name, collectionCenter, dailryName, fatherName, mobile } = request.body
-        if (!name || !collectionCenter || !dailryName || !fatherName || !mobile) {
+        const { name, mobile } = request.body
+        if (!name || !mobile) {
             return next(new ApiError("No required information available", 400))
         }
         const isUserExists = await userModal.findOne({ mobile })
@@ -305,12 +319,9 @@ export const createSeller = async (request, response, next) => {
         const createdUser = await userModal.create({
             id: password,
             name,
-            collectionCenter,
-            dailryName,
-            fatherName,
             mobile,
             password,
-            role: "Seller"
+            role: "Buyer"
         })
         if (!createdUser) {
             return next(new ApiError("Unable to create user", 400))
@@ -319,28 +330,49 @@ export const createSeller = async (request, response, next) => {
         const newUser = await userModal.findById(createdUser._id).select("-password -isVerified");
         const userResponse = {
             id: newUser.id,
+            _id: newUser._id,
             name: newUser.name,
             mobile: newUser.mobile,
             role: newUser.role,
             profilePic: newUser.profilePic,
-            fatherName: newUser.fatherName
         };
         const token = await newUser.generateAuthToken();
         newUser.token = token;
         response.status(201).json({ message: "User created", token, user: userResponse, success: true })
     } catch (error) {
-        next(new ApiError("Error while trying to update admin password", 400))
+        next(new ApiError("Error while creating buyer", 400))
     }
 }
-export const getAllSellerList = async (request, response, next) => {
+
+// ====> Change Role Controller <===============
+export const changeUserRole = async (req, res, next) => {
     try {
-        const allCustomers = await userModal.find({ role: "Seller" })
-        response.status(200).json({
+        const usersToUpdate = req.body.users; // Expecting an array: [{ customerId, role }, ...]
+        const allUsersToUpdate = JSON.parse(usersToUpdate)
+        if (!Array.isArray(allUsersToUpdate)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid data format. Expected an array of users."
+            });
+        }
+
+        const updatePromises = allUsersToUpdate.map(user => {
+            const { customerId, role } = user;
+            return userModal.findByIdAndUpdate(
+                customerId,
+                { role },
+                { new: true, runValidators: true }
+            );
+        });
+
+        const updatedUsers = await Promise.all(updatePromises);
+
+        return res.status(200).json({
             success: true,
-            message: "customers retrieved successfully.",
-            users: allCustomers,
+            message: "Customer roles updated",
+            users: updatedUsers,
         });
     } catch (error) {
-        next(new ApiError("Error getting all customer list", 400))
+        next(new ApiError("Error updating user roles", 500));
     }
-}
+};
