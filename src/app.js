@@ -30,7 +30,7 @@ app.get("/", (req, res) => {
     res.send("Hello From Santosh's Api")
 })
 app.get("/try", (req, res) => {
-    res.send("Hello This is trying route for the sonarqube")
+    res.send("Hello This is trying route for the")
 })
 app.use('/api/v1/user', userRoute)
 app.use('/api/v1/milk', milkRouter)
