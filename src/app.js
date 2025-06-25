@@ -4,9 +4,10 @@ import { errorHandler } from './middleware/errorHandler.middleware.js';
 import cors from 'cors'
 import { rateLimit } from 'express-rate-limit'
 import { milkRouter } from './routes/milk.route.js';
-
+import { validator } from './middleware/validator.js'
 const app = express();
 
+app.use(validator)
 app.use(express.json({ limit: "16kb" }))
 app.use(express.urlencoded({ extended: true }));
 
