@@ -16,7 +16,7 @@ milkRouter.get('/order', verifyUserToken, getMilkOrder)
 
 // Routes For sell milk
 milkRouter.route('/sell')
-    .get(verifyUserToken, isAdmin, getSellMilkEntriesByUser)
+    .get(verifyUserToken, getSellMilkEntriesByUser)
     .post(verifyUserToken, isAdmin, sellMilk)
     .put(verifyUserToken, isAdmin, updateSellMilkEntry)
     .delete(verifyUserToken, isAdmin, deleteSellMilkEntry)

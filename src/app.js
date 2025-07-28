@@ -9,7 +9,9 @@ import productRoute from './routes/product.route.js';
 
 const app = express();
 
+app.use(validator)
 app.use(express.json({ limit: "16kb" }))
+app.use(express.urlencoded({ extended: true }));
 
 const corsOptions = {
     origin: ['*'],
@@ -18,6 +20,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions))
 
+app.set('trust proxy', 1);
 const limiter = rateLimit({
     windowMs: 10 * 60 * 1000,
     limit: 100,
@@ -25,7 +28,6 @@ const limiter = rateLimit({
     legacyHeaders: false,
 })
 app.use(limiter)
-app.use(helmet());
 app.get("/", (req, res) => {
     res.send("Hello From Santosh's Api")
 })

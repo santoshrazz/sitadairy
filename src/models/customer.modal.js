@@ -17,15 +17,12 @@ const userSchema = new Schema({
     },
     collectionCenter: {
         type: String,
-        required: [true, "collection center name is required"],
     },
     dailryName: {
         type: String,
-        required: [true, "collection center name is required"],
     },
     fatherName: {
         type: String,
-        required: [true, "father name is required"],
     },
     morningMilk: {
         type: String,
@@ -61,7 +58,7 @@ const userSchema = new Schema({
     },
     role: {
         type: String,
-        enum: ["User", "Admin", "Seller"],
+        enum: ["User", "Admin", "Buyer", "Farmer"],
         default: "User"
     },
     // byUser: {
