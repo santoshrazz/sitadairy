@@ -4,7 +4,9 @@ import { errorHandler } from './middleware/errorHandler.middleware.js';
 import cors from 'cors'
 import { rateLimit } from 'express-rate-limit'
 import { milkRouter } from './routes/milk.route.js';
-import { validator } from './middleware/validator.js'
+import helmet from 'helmet'
+import productRoute from './routes/product.route.js';
+
 const app = express();
 
 app.use(validator)
@@ -31,5 +33,6 @@ app.get("/", (req, res) => {
 })
 app.use('/api/v1/user', userRoute)
 app.use('/api/v1/milk', milkRouter)
+app.use('/api/v1/product', productRoute)
 app.use(errorHandler);
 export { app }

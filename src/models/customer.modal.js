@@ -24,6 +24,18 @@ const userSchema = new Schema({
     fatherName: {
         type: String,
     },
+    morningMilk: {
+        type: String,
+        default: 1
+    },
+    eveningMilk: {
+        type: String,
+        default: 1
+    },
+    milkRate: {
+        type: String,
+        default: 50
+    },
     password: {
         type: String,
         minLength: [5, "Minimum 6 character required"],
