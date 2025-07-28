@@ -144,13 +144,18 @@ export const getSingleCustomerDetailAdmin = async (request, response, next) => {
 
 export const updateUserDetails = async (request, response, next) => {
     try {
-        const userId = request.user?._id
-        if (!userId) {
-            next(new ApiError("userId is required to update user", 400))
-        }
-        const { name, mobile, fatherName, address } = request.body;
+        let requestUserId = request.user?._id
+
+        const { name, mobile, fatherName, address, morningMilk, eveningMilk, milkRate, userId } = request.body;
         const updateData = {};
 
+        if (userId) {
+            requestUserId = userId
+        }
+
+        if (!requestUserId) {
+            next(new ApiError("userId is required to update user", 400))
+        }
         const profilePic = request?.file?.buffer;
         let userUploadedProfilePic = "";
 
@@ -166,9 +171,12 @@ export const updateUserDetails = async (request, response, next) => {
         if (mobile) updateData.mobile = mobile
         if (fatherName) updateData.fatherName = fatherName
         if (address) updateData.address = address
+        if (morningMilk) updateData.morningMilk = morningMilk
+        if (eveningMilk) updateData.eveningMilk = eveningMilk
+        if (milkRate) updateData.milkRate = milkRate
         if (userUploadedProfilePic) updateData.profilePic = userUploadedProfilePic;
 
-        const updatedUser = await userModal.findByIdAndUpdate(userId, updateData, { new: true, runValidators: true })
+        const updatedUser = await userModal.findByIdAndUpdate(requestUserId, updateData, { new: true, runValidators: true })
         response.status(200).json({ success: true, message: "User details updated successfully", user: updatedUser })
     } catch (error) {
         next(new ApiError("Error updating user details", 400))
@@ -206,7 +214,7 @@ export const dashboardData = async (request, response, next) => {
     try {
         const reqUser = await userModal.findById(userId);
         if (reqUser?.role === "Admin") {
-            const totalCustomers = await userModal.collection.countDocuments({ role: "User" })
+            const totalCustomers = await userModal.collection.countDocuments({ role: { $ne: "Admin" } })
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);

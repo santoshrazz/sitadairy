@@ -2,6 +2,8 @@ import { ApiError } from "../middleware/errorHandler.middleware.js"
 import { milkModal } from "../models/milk.modal.js"
 import { orderModal } from "../models/order.modal.js"
 import { userModal } from '../models/customer.modal.js'
+import ExcelJS from 'exceljs';
+import PDFDocument from 'pdfkit-table'; // pdfkit with table support
 
 export const createMilkEntry = async (request, response, next) => {
     try {
@@ -81,12 +83,12 @@ export const deleteMilkEntry = async (request, response, next) => {
 
 export const getMilkEntriesByUser = async (request, response, next) => {
     try {
-        const { startDate, endDate, shift } = request.query;
+        const { startDate, endDate, shift, entryType, export: exportFlag, exportType = "Pdf" } = request.query;
         const date = request.query.date || new Date();
         let userId = request.query.userId;
         const filter = {};
         const currentUser = await userModal.findById(request.user._id)
-        if (request.user._id && currentUser.role === "User") {
+        if (request.user._id && (currentUser.role === "Farmer" || currentUser.role === "Buyer" || currentUser.role === "User")) {
             userId = request.user._id
         }
 
@@ -118,14 +120,100 @@ export const getMilkEntriesByUser = async (request, response, next) => {
             filter.byUser = userId;
         }
 
+        if (entryType) {
+            filter.entryType = entryType
+        }
         // Filter by shift
         if (shift) {
             filter.shift = shift;
         }
-        const entries = await milkModal.find(filter).populate('byUser', "name id").sort({ date: -1 });
+        const entries = await milkModal.find(filter).populate('byUser', "name id profilePic").sort({ date: -1 });
+
+
+        // Logic for returning Excel 
+        if (exportFlag === 'true' && exportType === "Excel") {
+            const workbook = new ExcelJS.Workbook();
+            const sheet = workbook.addWorksheet('Milk Entries');
+
+            // Define columns
+            sheet.columns = [
+                { header: 'No.', key: 'no', width: 6 },
+                { header: 'User', key: 'user', width: 25 },
+                { header: 'Date', key: 'date', width: 20 },
+                { header: 'Shift', key: 'shift', width: 10 },
+                { header: 'Rate', key: 'rate', width: 10 },
+                { header: 'Weight', key: 'weight', width: 10 },
+                { header: 'Price', key: 'price', width: 12 },
+            ];
+
+            // Populate rows
+            entries.forEach((e, i) => {
+                sheet.addRow({
+                    no: i + 1,
+                    user: e.byUser?.name || 'N/A',
+                    date: new Date(e.date).toLocaleString(),
+                    shift: e.shift,
+                    rate: e.rate,
+                    weight: e.weight,
+                    price: e.price,
+                });
+            });
+
+            // Set headers and stream workbook to response
+            response.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            response.setHeader('Content-Disposition', 'attachment; filename=milk_entries.xlsx');
+
+            await workbook.xlsx.write(response);
+            response.end();
+            return;
+        }
+        if (exportFlag === 'true' && exportType === "Pdf") {
+            const doc = new PDFDocument({ margin: 30, size: 'A4' });
+            response.setHeader('Content-Type', 'application/pdf');
+            response.setHeader('Content-Disposition', 'attachment; filename=milk_entries.pdf');
+            doc.pipe(response);
+
+            // Title
+            doc.fontSize(18).text('Sita Dairy Milk Report', { align: 'center' });
+            doc.fontSize(12).text(`From ${startDate || date} To ${endDate || date}`, { align: 'center' });
+            doc.moveDown(1);
+
+            // Prepare table
+            const table = {
+                headers: [
+                    { label: 'No.', property: 'no', width: 40 },
+                    { label: 'Name', property: 'user', width: 100 },
+                    { label: 'Date', property: 'date', width: 120 },
+                    { label: 'Shift', property: 'shift', width: 60 },
+                    { label: 'Rate', property: 'rate', width: 60 },
+                    { label: 'Weight', property: 'weight', width: 60 },
+                    { label: 'Price', property: 'price', width: 60 },
+                ],
+                rows: entries.map((e, i) => ([
+                    i + 1,
+                    e.byUser?.name || 'N/A',
+                    new Date(e.date).toLocaleString(),
+                    e.shift,
+                    e.rate,
+                    e.weight,
+                    e.price
+                ]))
+            };
+
+            // Render table
+            await doc.table(table, {
+                width: doc.page.width - doc.page.margins.left - doc.page.margins.right,
+                prepareHeader: () => doc.font('Helvetica-Bold').fontSize(12).fillColor('black'),
+                prepareRow: (row, idx) => doc.font('Helvetica').fontSize(10).fillColor('black')
+            });
+
+            doc.end();
+            return;
+        }
 
         response.status(200).json({ success: true, data: entries });
     } catch (error) {
+        console.log("error", error)
         next(new ApiError("Error retrieving milk entries", 400));
     }
 };
