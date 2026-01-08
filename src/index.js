@@ -1,13 +1,13 @@
-import dotenv from 'dotenv'
-import { app } from './app.js'
-import { connectToDb } from './db/connectToDb.js'
+import dotenv from "dotenv";
+import { app } from "./app.js";
+import { connectToDb } from "./db/connectToDb.js";
+import serverless from "serverless-http";
 
-dotenv.config({ path: "./.env" })
-
-connectToDb().then(() => {
-    app.listen(process.env.PORT || 8080, () => {
-        console.log("Server listening at port", process.env.PORT);
-    });
-}).catch((error) => {
-    console.log("Error starting the server", error);
+dotenv.config({ path: "./.env" });
+const PORT = process.env.PORT || 8080;
+await connectToDb().then(() => {
+  app.listen(PORT, () => {
+    console.log(`APP IS LISTNING AT ${PORT}`);
+  });
 });
+export const handler = serverless(app);
