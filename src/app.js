@@ -62,7 +62,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 app.get("/", (req, res) => {
-  res.send("Hello From Santosh's Api");
+  res.send("Hello From Santosh's Api And Latest Image have been pushed");
 });
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/milk", milkRouter);
