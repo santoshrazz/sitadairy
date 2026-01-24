@@ -7,6 +7,7 @@ import { milkRouter } from "./routes/milk.route.js";
 import productRoute from "./routes/product.route.js";
 import paymentRoute from "./routes/payment.route.js";
 import rateChartRouter from "./routes/ratechart.route.js";
+import { generalRouter } from "./routes/general.route.js";
 
 const app = express();
 
@@ -69,5 +70,6 @@ app.use("/api/v1/milk", milkRouter);
 app.use("/api/v1/product", productRoute);
 app.use("/api/v1/payment", paymentRoute);
 app.use("/api/v1/ratechart", rateChartRouter);
+app.use("/api/v1/general", generalRouter);
 app.use(errorHandler);
 export { app };

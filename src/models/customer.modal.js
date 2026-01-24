@@ -53,6 +53,22 @@ const userSchema = new Schema(
       type: String,
       default: 50,
     },
+    latitude: {
+      type: String,
+    },
+    longitude: {
+      type: String,
+    },
+    preferedShift: {
+      type: String,
+      enum: ["Morning", "Evening", "Both"],
+      default: "Both",
+    },
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Other"],
+      default: "Male",
+    },
     isVerified: {
       type: Boolean,
       default: false,

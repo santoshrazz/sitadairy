@@ -55,13 +55,11 @@ export const handleCreateUser = async (request, response, next) => {
 export const handleLoginUser = async (request, response, next) => {
   const { mobile, password } = request.body;
 
-  console.log("mobile", mobile);
-  console.log("password", password);
-
   try {
     const user = await userModal.findOne({ mobile }).select("+password +role");
+    console.log("user", user);
     // Check if the user exists
-    if (!user) {
+    if (!user && !user?.status) {
       return next(
         new ApiError("User does not exist. Please register first.", 404)
       );
@@ -95,6 +93,7 @@ export const handleLoginUser = async (request, response, next) => {
       user: userResponse,
     });
   } catch (error) {
+    console.log("error", error);
     next(new ApiError("Error logging user", 400));
   }
 };
@@ -182,6 +181,10 @@ export const updateUserDetails = async (request, response, next) => {
       milkRate,
       userId,
       status,
+      gender,
+      latitude,
+      longitude,
+      preferedShift,
     } = request.body;
     const updateData = {};
 
@@ -212,6 +215,10 @@ export const updateUserDetails = async (request, response, next) => {
     if (milkRate) updateData.milkRate = milkRate;
     if (userUploadedProfilePic) updateData.profilePic = userUploadedProfilePic;
     if (status) updateData.status = status;
+    if (gender) updateData.gender = gender;
+    if (latitude) updateData.latitude = latitude;
+    if (longitude) updateData.longitude = longitude;
+    if (preferedShift) updateData.preferedShift = preferedShift;
 
     const updatedUser = await userModal.findByIdAndUpdate(
       requestUserId,
@@ -254,10 +261,10 @@ export const updateAdminPassword = async (request, response, next) => {
 export const deleteUserAccount = async (request, response, next) => {
   try {
     const userId = request.user._id;
-    // await userModal.findByIdAndDelete(userId)
+    await userModal.findByIdAndUpdate(userId, { status: false });
     return response
       .status(200)
-      .json({ success: true, message: "account deleted successfully" });
+      .json({ success: true, message: "Account Deactivated successfully" });
   } catch (error) {
     return next(new ApiError("Error deleting user account", 400));
   }
